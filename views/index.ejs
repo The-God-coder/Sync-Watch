@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sync Watch</title>
+    <style>
+      #player{
+        display: block;
+        margin-right: auto;
+      
+  
+      }
+      #input1{
+        width: 1000
+      }
+    </style>
+    <style>
+      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; margin-left: 1180px; }
+      #input:focus { outline: none; }
+      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+
+      #messages { list-style-type: none; margin: 0; padding: 0; margin-left: 1180px; overflow-y: scroll; height: 785px;}
+      #messages > li { padding: 0.5rem 1rem; }
+      #messages > li:nth-child(odd) { background: #efefef; }
+      .player{
+    width:55%;
+    margin-right:2%;
+    float: left;
+}
+
+.messages {
+    width:42%;
+    height: 1118px;
+    float: left;
+    overflow-y: scroll;
+}
+.clearfix{
+    clear:both
+}
+      /* #div1{height: 715px; overflow-y: scroll; overflow-x: scroll;} */
+      /* .splitscreen {
+    display:flex;
+}
+.splitscreen .left {
+    flex: 1;
+}
+.splitscreen .right {
+    flex: 1;
+} */
+    </style>
+  </head>
+  <body>
+    <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
+  
+      
+  
+        <div class="player">
+    <div id="player" class="left"></div><br>
+    <input type="url" id="input1" placeholder="URL for youtube video">
+    <input type="button" value="ENTER" id="enter">
+    <input type="button" id="control" value="Take Control">
+    
+    <form id="form" action="">
+      <input id="input" autocomplete="off" /><button>Send</button>
+    </form>
+  </div>
+  
+  <div class="message">
+    <ul id="messages"></ul>
+  </div>
+  <div class="clearfix"></div>
+    
+    
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+      //Socket IO scripts
+      var socket = io();
+      //random stuff
+      var messages = document.getElementById('messages');
+      var form = document.getElementById('form');
+      var input = document.getElementById('input');
+      // 2. This code loads the IFrame Player API code asynchronously.
+      
+      var tag = document.createElement('script');
+
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      // 3. This function creates an <iframe> (and YouTube player)
+      //    after the API code downloads.
+      var player;
+      
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+          height: '785',
+          width: '1180',
+          videoId: '9maM4PYysS0',
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      }
+      
+
+      // 4. The API will call this function when the video player is ready.
+      function onPlayerReady(event) {
+        event.target.playVideo();
+      }
+
+      // 5. The API calls this function when the player's state changes.
+      //    The function indicates that when playing a video (state=1),
+      //    the player should play for six seconds and then stop.
+      
+
+      var done = false;
+      function onPlayerStateChange(event) {
+        if(event.data == YT.PlayerState.PLAYING) {   
+        if(document.getElementById('control').value == "Controlling"){
+          socket.emit("playing",Math.round(10*player.getCurrentTime())/10)
+        }
+          
+        }
+        if(event.data == YT.PlayerState.PAUSED) {       
+          console.log('paused')
+          // console.log(player.getCurrentTime())
+          if(document.getElementById('control').value == "Controlling"){
+          socket.emit("paused")
+          }
+          player.pauseVideo()
+        }
+        if(event.data == YT.PlayerState.ENDED) {       
+          console.log('ended')
+         
+          
+        }  
+        
+        
+
+
+
+        if (event.data == YT.PlayerState.PLAYING && !done) {
+          
+          setTimeout(stopVideo, 6000);
+          done = true;
+        }
+      }
+      
+      
+      document.getElementById('enter').addEventListener('click', function(){
+            console.log('clicked - jquery')
+            console.log(console.log(document.getElementById('input1').value))
+            if(document.getElementById('control').value == "Controlling"){
+            socket.emit("new_video", document.getElementById('input1').value);
+            }
+          });    
+      document.getElementById('control').addEventListener('click', () => {
+            document.getElementById('control').value = "Controlling"
+            socket.emit('controlling')
+            
+      });  
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (input.value) {
+          socket.emit('chat message', input.value);
+          input.value = '';
+        }
+      });
+
+      socket.on('chat message', function(msg) {
+        var item = document.createElement('li');
+        item.textContent = msg;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+    
+  
+socket.on("new_video", (arg) => {
+        player.loadVideoById(arg, 0)
+});
+socket.on("playing", (arg) => {
+        player.playVideo()
+        player.seekTo(arg)
+});
+socket.on("paused", () => {
+        player.pauseVideo()
+});
+socket.on("lost_control", () => {
+  document.getElementById('control').value = "Take Control"
+  
+});
+
+      function stopVideo() {
+        
+        player.stopVideo();
+      }
+      window.setInterval(function() {
+  var elem = document.getElementById('messages');
+  elem.scrollTop = elem.scrollHeight;
+}, 50);
+    </script>
+  
+
+
+   
+  </body>
+</html>
