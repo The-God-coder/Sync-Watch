@@ -1,6 +1,6 @@
-# node-js-template
+# node-js Syncronized Watching App
 
-A barebones Node.js app using [Express 4](http://expressjs.com/).
+A Node.js app using [Express 4](http://expressjs.com/).
 
 This application supports the [Getting Started with Node on Heroku](https://devcenter.heroku.com/articles/getting-started-with-nodejs) article - check it out.
 
@@ -9,8 +9,8 @@ This application supports the [Getting Started with Node on Heroku](https://devc
 Make sure you have [Node.js](http://nodejs.org/) and the [Heroku CLI](https://cli.heroku.com/) installed.
 
 ```sh
-$ git clone git@github.com:jomaoppa/node-js-template.git # or clone your own fork
-$ cd node-js-template
+$ git clone git@github.com:The-God-coder/Sync-Watch.git # or clone your own fork
+$ cd Sync-Watch
 $ npm install
 $ npm start
 ```
