@@ -24,10 +24,7 @@
   "keywords": [
     "node"
   ],
-  "author": "Joma",
+  "author": "Aniket Kokate",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/jomaoppa/node-js-template/issues"
-  },
-  "homepage": "https://github.com/jomaoppa/node-js-template#readme"
+  
 }
